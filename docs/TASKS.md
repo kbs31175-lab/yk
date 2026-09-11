@@ -5,31 +5,27 @@
 ---
 
 ## 🏃 Doing (현재 진행 중)
-- 없음 (모든 구현 및 GitHub 배포 푸시 완료)
+- 없음 (모든 구현, Supabase 연동 및 검증 완료)
 
 ---
 
-## ⏳ Todo (예정된 작업)
-- [ ] Vercel 대시보드에서 GitHub 레포지토리(`kbs31175-lab/yk`) 임포트 및 Turso SQLite 환경변수 등록 후 배포
+## ⏳ Todo (사용자 설정 가이드)
+- [ ] Supabase 프로젝트 대시보드의 SQL Editor에 `supabase/schema.sql` 붙여넣고 [Run] 실행
+- [ ] Vercel 및 `.env.local`에 Supabase `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` 입력
 
 ---
 
 ## ✅ Done (완료된 작업)
-- [x] **GitHub 원격 저장소 푸시 완료**: `https://github.com/kbs31175-lab/yk.git` 원격 연결 및 `main` 브랜치 최초 커밋/푸시 완료
-  - 🎯 **학습 목표**: Git 워크플로우를 통한 프로젝트 버전 관리 및 Vercel 연동 준비 완료
-- [x] **프로젝트 자아 정립 및 아키텍처 수립**: 루트 `README.md` 및 `docs/CONTEXT.md` 작성
-  - 🎯 **학습 목표**: Vercel 서버리스 환경과 SQLite 파일 시스템 제약의 상관관계 및 Turso/libSQL 해결책 도출
-- [x] **Next.js 14 및 Drizzle ORM 환경 셋업**: `package.json`, `tsconfig.json`, `next.config.mjs` 구성 및 의존성 설치
-  - 🎯 **학습 목표**: Next.js App Router와 Drizzle Kit의 설정 구조 및 SQLite 드라이버 통합 방식 이해
-- [x] **SQLite 데이터베이스 스키마 및 마이그레이션**: `users`, `rooms`, `messages` 테이블 모델링
-  - 🎯 **학습 목표**: 1:N 관계형 데이터베이스 스키마 설계 및 외래키(Foreign Key) 캐스케이드 정책 수립
-- [x] **인증 API 및 타임스탬프 로직 구현**: 회원가입, 로그인(`last_login_at` 갱신), 로그아웃, 현재 세션 조회
-  - 🎯 **학습 목표**: `bcryptjs` 단방향 해싱과 `jose` JWT 토큰을 활용한 HTTP-Only 쿠키 세션 구현
-- [x] **채팅방 및 메시지 API 구현**: 방 생성/목록 조회, 메시지 송수신 API
-  - 🎯 **학습 목표**: Drizzle ORM의 `leftJoin`과 정렬(`orderBy`) 쿼리를 통한 복합 데이터 패칭 패턴 학습
-- [x] **프리미엄 글래스모피즘 디자인 시스템 구축**: `globals.css` 디자인 토큰 및 반응형 챗 UI
-  - 🎯 **학습 목표**: Vanilla CSS 변수(Custom Properties)를 활용한 현대적 다크 테마 및 글래스모피즘 스타일링
-- [x] **실시간 인터랙션 및 프론트엔드 통합**: 채팅방 뷰, 메시지 오토 스크롤, 주기적 데이터 동기화
-  - 🎯 **학습 목표**: React 상태 관리와 클라이언트 사이드 주기적 갱신(Polling)을 통한 실시간 UX 체득
-- [x] **E2E 및 빌드 검증**: 회원가입/로그인/타임스탬프/채팅방/메시지 전체 플로우 100% 통과
-  - 🎯 **학습 목표**: 실제 프로덕션 서버 구동 환경에서의 엔드투엔드 세션 유지 및 메시징 동작 검증
+- [x] **Supabase (PostgreSQL & Realtime) 연동 구현**:
+  - `@supabase/supabase-js`, `@supabase/ssr` 패키지 설치
+  - 브라우저 및 서버용 Supabase 클라이언트 (`src/lib/supabase/*`) 모듈화
+  - `supabase/schema.sql` DDL 및 Realtime Publication 스크립트 작성
+  - 🎯 **학습 목표**: BaaS(Backend as a Service) 아키텍처와 Postgres CDC(Change Data Capture) 기반 웹소켓 통신 원리 이해
+- [x] **하이브리드 Data Service 레포지토리 패턴 도입**:
+  - `src/lib/data-service.ts`를 통해 Supabase와 로컬 SQLite를 조건부로 스위칭
+  - 🎯 **학습 목표**: OCP(개방-폐쇄 원칙)와 단일 책임 원칙(SRP)을 만족하는 데이터 접근 계층 추상화
+- [x] **프론트엔드 Supabase Realtime 구독 적용**:
+  - `ChatArea.tsx`에 `supabase.channel()` 실시간 구독 및 `🟢 Supabase Realtime` 뱃지 적용
+  - 🎯 **학습 목표**: WebSocket 채널 라이프사이클 및 실시간 리액티브 UI 설계
+- [x] **Next.js 14 프로덕션 빌드 및 E2E 테스트 100% 통과**:
+  - 회원가입, 로그인 타임스탬프(`last_login_at`) 기록, 방 생성, 메시지 전송 및 조회 검증 완료

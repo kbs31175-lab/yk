@@ -20,10 +20,22 @@
 | 기술 | 역할 | 선정 이유 (Why this tech?) |
 | :--- | :--- | :--- |
 | **Next.js 14+ (App Router)** | Fullstack Framework | 프론트엔드와 백엔드 API(Route Handlers)를 일원화하고 Vercel에 최적화된 배포 파이프라인 제공 |
-| **Drizzle ORM** | Type-Safe ORM | 무거운 바이너리 엔진이 없어 Vercel 콜드 스타트(Cold-Start) 지연을 최소화하며 순수 TypeScript로 완벽한 타입 안전성 보장 |
-| **libSQL (`@libsql/client`)** | SQLite Driver | 로컬에서는 `file:local.db`로 독립 동작하고, 배포 시 환경변수 설정만으로 클라우드 Turso DB로 무중단 확장 가능 |
+| **Supabase (Postgres & Realtime)** | Cloud Database & WebSocket | Vercel의 파일 휘발성 제약을 완벽히 극복하며, Postgres CDC 기반 웹소켓 실시간 브로드캐스트 제공 |
+| **Drizzle ORM & libSQL** | Local Fallback DB | 로컬 환경에서 가볍고 빠르게 오프라인 개발이 가능한 하이브리드 지원 |
 | **Jose (JWT)** | Edge-ready Session | Vercel Edge 런타임 및 Node.js 런타임 모두에서 가볍고 안전하게 구동되는 웹 표준 암호화 라이브러리 |
 | **Vanilla CSS** | Styling System | 런타임 오버헤드가 없으며, 고유한 디자인 토큰과 글래스모피즘 시각 효과를 정밀하게 제어 |
+
+---
+
+## ⚡ Supabase 1분 연동 방법
+1. [Supabase](https://supabase.com) 프로젝트 생성
+2. **SQL Editor**에 [`supabase/schema.sql`](./supabase/schema.sql) 파일 내용을 붙여넣고 **Run** 실행
+3. `.env.local`에 Supabase URL과 Key 입력:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   ```
+4. 앱 실행 시 상단에 **`🟢 Supabase Realtime`** 뱃지가 뜨며 실시간 웹소켓 채팅이 시작됩니다!
 
 ---
 

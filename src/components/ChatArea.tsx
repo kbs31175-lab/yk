@@ -27,6 +27,8 @@ interface ChatAreaProps {
   onNewMessageSent?: () => void;
 }
 
+import { getBrowserSupabase } from "@/lib/supabase/client";
+
 export default function ChatArea({
   currentRoom,
   currentUserId,
@@ -37,6 +39,7 @@ export default function ChatArea({
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 메시지 목록 불러오기
@@ -73,14 +76,43 @@ export default function ChatArea({
     });
   }, [currentRoom?.id]);
 
-  // 실시간 메시지 폴링 (3초 간격 동기화)
+  // 🌟 [Supabase Realtime 웹소켓 연동]
+  // Supabase가 설정되어 있으면 실시간 WebSocket 이벤트 구독, 미설정 시 3초 폴링 자동 전환
   useEffect(() => {
     if (!currentRoom) return;
-    const interval = setInterval(() => {
-      fetchMessages();
-    }, 3000);
 
-    return () => clearInterval(interval);
+    const supabase = getBrowserSupabase();
+    if (supabase) {
+      setIsRealtimeActive(true);
+      const channel = supabase
+        .channel(`room:${currentRoom.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `room_id=eq.${currentRoom.id}`,
+          },
+          (payload) => {
+            // Supabase Realtime으로 새 메시지가 도착하면 즉시 메시지 갱신
+            fetchMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } else {
+      // Supabase 미설정 시 3초 주기 폴링 fallback
+      setIsRealtimeActive(false);
+      const interval = setInterval(() => {
+        fetchMessages();
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }
   }, [currentRoom?.id]);
 
   // 메시지 업데이트 시 최하단으로 자동 스크롤
@@ -161,20 +193,29 @@ export default function ChatArea({
         </div>
 
         <div style={styles.headerRight}>
-          <button
-            style={styles.refreshBtn}
-            onClick={() => fetchMessages(true)}
-            title="새로고침"
-          >
-            <RefreshCw
-              size={14}
-              color="#94a3b8"
-              className={isSyncing ? "animate-spin" : ""}
-            />
-            <span style={styles.syncText}>
-              {isSyncing ? "동기화 중..." : "실시간 동기화"}
-            </span>
-          </button>
+          {isRealtimeActive ? (
+            <div style={styles.realtimeActiveBadge} title="Supabase Realtime 웹소켓 연결 활성화">
+              <span className="badge-dot" style={{ backgroundColor: "#10b981", boxShadow: "0 0 10px #10b981" }} />
+              <span style={{ fontSize: "0.74rem", fontWeight: 600, color: "#6ee7b7" }}>
+                Supabase Realtime
+              </span>
+            </div>
+          ) : (
+            <button
+              style={styles.refreshBtn}
+              onClick={() => fetchMessages(true)}
+              title="동기화 새로고침"
+            >
+              <RefreshCw
+                size={14}
+                color="#94a3b8"
+                className={isSyncing ? "animate-spin" : ""}
+              />
+              <span style={styles.syncText}>
+                {isSyncing ? "동기화 중..." : "실시간 동기화"}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -367,6 +408,15 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
+  },
+  realtimeActiveBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    background: "rgba(16, 185, 129, 0.12)",
+    border: "1px solid rgba(16, 185, 129, 0.3)",
+    padding: "6px 14px",
+    borderRadius: "999px",
   },
   refreshBtn: {
     display: "flex",

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { messages, users, rooms } from "@/db/schema";
+import { getRoomById, getMessagesByRoom, createMessageRecord } from "@/lib/data-service";
 import { getCurrentUser } from "@/lib/auth";
-import { asc, eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -14,42 +12,23 @@ interface RouteParams {
 
 /**
  * 💬 GET /api/rooms/[roomId]/messages
- * 특정 채팅방의 메시지 내역 조회 (작성자 정보 포함)
+ * 특정 채팅방의 메시지 내역 조회 (Supabase & SQLite 지원)
  */
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { roomId } = params;
 
     // 1단계: 채팅방 존재 여부 확인
-    const roomExists = await db
-      .select({ id: rooms.id, name: rooms.name, description: rooms.description })
-      .from(rooms)
-      .where(eq(rooms.id, roomId))
-      .limit(1);
-
-    if (roomExists.length === 0) {
+    const room = await getRoomById(roomId);
+    if (!room) {
       return NextResponse.json({ error: "채팅방을 찾을 수 없습니다." }, { status: 404 });
     }
 
-    // 2단계: 메시지와 작성자 정보 JOIN 쿼리 (시간순 정렬)
-    const messageList = await db
-      .select({
-        id: messages.id,
-        roomId: messages.roomId,
-        content: messages.content,
-        createdAt: messages.createdAt,
-        userId: messages.userId,
-        senderUsername: users.username,
-        senderNickname: users.nickname,
-        senderAvatarColor: users.avatarColor,
-      })
-      .from(messages)
-      .leftJoin(users, eq(messages.userId, users.id))
-      .where(eq(messages.roomId, roomId))
-      .orderBy(asc(messages.createdAt));
+    // 2단계: 메시지와 작성자 정보 조회
+    const messageList = await getMessagesByRoom(roomId);
 
     return NextResponse.json({
-      room: roomExists[0],
+      room,
       messages: messageList,
     });
   } catch (error) {
@@ -89,25 +68,17 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     // 3단계: 채팅방 존재 확인
-    const roomExists = await db
-      .select({ id: rooms.id })
-      .from(rooms)
-      .where(eq(rooms.id, roomId))
-      .limit(1);
-
-    if (roomExists.length === 0) {
+    const room = await getRoomById(roomId);
+    if (!room) {
       return NextResponse.json({ error: "존재하지 않는 채팅방입니다." }, { status: 404 });
     }
 
     // 4단계: 메시지 레코드 생성
-    const [newMessage] = await db
-      .insert(messages)
-      .values({
-        roomId,
-        userId: currentUser.id,
-        content: content.trim(),
-      })
-      .returning();
+    const newMessage = await createMessageRecord({
+      roomId,
+      userId: currentUser.id,
+      content: content.trim(),
+    });
 
     return NextResponse.json(
       {
@@ -121,10 +92,10 @@ export async function POST(request: Request, { params }: RouteParams) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("메시지 전송 중 에러:", error);
     return NextResponse.json(
-      { error: "메시지 전송에 실패했습니다." },
+      { error: error?.message || "메시지 전송에 실패했습니다." },
       { status: 500 }
     );
   }

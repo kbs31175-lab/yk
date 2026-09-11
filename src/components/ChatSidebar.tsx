@@ -141,7 +141,7 @@ export default function ChatSidebar({
       <div style={styles.bottomSection}>
         <div style={styles.techInfo}>
           <Shield size={12} color="#10b981" />
-          <span>SQLite / libSQL + Vercel</span>
+          <span>Supabase & SQLite + Vercel</span>
         </div>
         <button style={styles.logoutBtn} onClick={onLogout}>
           <LogOut size={16} />

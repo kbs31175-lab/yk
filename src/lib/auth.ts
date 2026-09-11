@@ -1,9 +1,6 @@
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
 
 const JWT_SECRET_STRING =
   process.env.JWT_SECRET || "super_secret_session_jwt_key_260911_change_in_production";
@@ -93,20 +90,7 @@ export async function getCurrentUser() {
   const payload = await verifySessionToken(token);
   if (!payload) return null;
 
-  // DB에서 최신 유저 정보 조회 (lastLoginAt 포함)
-  const userList = await db
-    .select({
-      id: users.id,
-      username: users.username,
-      nickname: users.nickname,
-      avatarColor: users.avatarColor,
-      createdAt: users.createdAt,
-      lastLoginAt: users.lastLoginAt,
-    })
-    .from(users)
-    .where(eq(users.id, payload.userId))
-    .limit(1);
-
-  if (userList.length === 0) return null;
-  return userList[0];
+  // Data Service를 통해 최신 유저 정보 조회 (Supabase 또는 SQLite)
+  const { getUserById } = await import("./data-service");
+  return await getUserById(payload.userId);
 }

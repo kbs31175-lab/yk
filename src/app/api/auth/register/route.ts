@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
+import { getUserByUsername, createUser } from "@/lib/data-service";
 import { hashPassword } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+
+export const dynamic = "force-dynamic";
 
 const AVATAR_PALETTE = [
   "#6366f1", // Indigo
@@ -16,7 +16,7 @@ const AVATAR_PALETTE = [
 
 /**
  * 📝 POST /api/auth/register
- * 신규 사용자 회원가입 처리
+ * 신규 사용자 회원가입 처리 (Supabase & SQLite 하이브리드 지원)
  */
 export async function POST(request: Request) {
   try {
@@ -38,18 +38,14 @@ export async function POST(request: Request) {
     }
 
     const cleanUsername = username.trim().toLowerCase();
-    const cleanNickname = (nickname && typeof nickname === "string" && nickname.trim()) 
-      ? nickname.trim() 
-      : cleanUsername;
+    const cleanNickname =
+      nickname && typeof nickname === "string" && nickname.trim()
+        ? nickname.trim()
+        : cleanUsername;
 
     // 2단계: 아이디 중복 확인
-    const existing = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.username, cleanUsername))
-      .limit(1);
-
-    if (existing.length > 0) {
+    const existing = await getUserByUsername(cleanUsername);
+    if (existing) {
       return NextResponse.json(
         { error: "이미 사용 중인 아이디입니다." },
         { status: 409 }
@@ -62,21 +58,12 @@ export async function POST(request: Request) {
     // 4단계: 랜덤 아바타 컬러 부여 및 DB 저장
     const randomColor = AVATAR_PALETTE[Math.floor(Math.random() * AVATAR_PALETTE.length)];
 
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        username: cleanUsername,
-        passwordHash,
-        nickname: cleanNickname,
-        avatarColor: randomColor,
-      })
-      .returning({
-        id: users.id,
-        username: users.username,
-        nickname: users.nickname,
-        avatarColor: users.avatarColor,
-        createdAt: users.createdAt,
-      });
+    const newUser = await createUser({
+      username: cleanUsername,
+      passwordHash,
+      nickname: cleanNickname,
+      avatarColor: randomColor,
+    });
 
     return NextResponse.json(
       {
@@ -85,10 +72,10 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("회원가입 처리 중 에러:", error);
     return NextResponse.json(
-      { error: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요." },
+      { error: error?.message || "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요." },
       { status: 500 }
     );
   }

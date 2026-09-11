@@ -5,16 +5,18 @@
 ---
 
 ## 🏃 Doing (현재 진행 중)
-- [ ] 전체 완료 및 최종 멘토링 브리핑 제공
+- 없음 (모든 구현 및 GitHub 배포 푸시 완료)
 
 ---
 
 ## ⏳ Todo (예정된 작업)
-- [ ] (사용자 배포 단계) Vercel 대시보드에서 Turso SQLite 연결 환경변수 등록 및 프로덕션 배포
+- [ ] Vercel 대시보드에서 GitHub 레포지토리(`kbs31175-lab/yk`) 임포트 및 Turso SQLite 환경변수 등록 후 배포
 
 ---
 
 ## ✅ Done (완료된 작업)
+- [x] **GitHub 원격 저장소 푸시 완료**: `https://github.com/kbs31175-lab/yk.git` 원격 연결 및 `main` 브랜치 최초 커밋/푸시 완료
+  - 🎯 **학습 목표**: Git 워크플로우를 통한 프로젝트 버전 관리 및 Vercel 연동 준비 완료
 - [x] **프로젝트 자아 정립 및 아키텍처 수립**: 루트 `README.md` 및 `docs/CONTEXT.md` 작성
   - 🎯 **학습 목표**: Vercel 서버리스 환경과 SQLite 파일 시스템 제약의 상관관계 및 Turso/libSQL 해결책 도출
 - [x] **Next.js 14 및 Drizzle ORM 환경 셋업**: `package.json`, `tsconfig.json`, `next.config.mjs` 구성 및 의존성 설치
